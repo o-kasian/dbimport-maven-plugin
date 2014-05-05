@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lifecycles>
+  <lifecycle>
+    <id>install</id>
+    <phases>
+      <phase>
+        <id>compile-first</id>
+        <executions>
+          <execution>
+            <goals>
+              <goal>
+                org.apache.maven.plugins:maven-dependency-plugin:copy-dependencies
+              </goal>
+            </goals>
+            <configuration>
+              <includeScope>compile</includeScope>
+              <includeTypes>jar</includeTypes>
+              <overWrite>true</overWrite>
+              <outputDirectory>
+                ${project.build.outputDirectory}/jars
+              </outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </phase>
+    </phases>
+  </lifecycle>
+</lifecycles>
