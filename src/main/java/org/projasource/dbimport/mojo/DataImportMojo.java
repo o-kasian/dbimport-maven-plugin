@@ -1,4 +1,26 @@
-package org.projasource.dimport;
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2014 projasource.org
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package org.projasource.dbimport.mojo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,10 +54,11 @@ import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.StringUtils;
 import org.json.simple.parser.ContainerFactory;
 import org.json.simple.parser.JSONParser;
+import org.projasource.dbimport.bindings.SqlQueryExecutor;
 
 /**
  *
- * @author oleg
+ * @author Oleg Kasian
  */
 @Mojo(
         name = "import",
@@ -48,25 +71,18 @@ public class DataImportMojo extends AbstractMojo {
 
     @Parameter(property = "driverClass", required = true)
     private String driverClass;
-
     @Parameter(property = "url", required = true)
     private String url;
-
     @Parameter(property = "user", required = true)
     private String user;
-
     @Parameter(property = "password", required = true)
     private String password;
-
     @Parameter(property = "schema")
     private String schema;
-
     @Parameter(property = "storage", required = true)
     private String storage;
-
     @Parameter(property = "importDescriptor", required = true)
     private String importDescriptor;
-
     private BasicDataSource ds;
     private Connection conn;
     private File store;
@@ -91,15 +107,13 @@ public class DataImportMojo extends AbstractMojo {
             //Iterate
             final JSONParser parser = new JSONParser();
             final ContainerFactory orderedKeyFactory = new ContainerFactory() {
-
                 public Map createObjectContainer() {
-                  return new LinkedHashMap();
+                    return new LinkedHashMap();
                 }
 
                 public List creatArrayContainer() {
                     return new LinkedList();
                 }
-
             };
             final LinkedHashMap object = (LinkedHashMap) parser.parse(new FileReader(importDescriptor), orderedKeyFactory);
             for (final Object o : object.keySet()) {

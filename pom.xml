@@ -2,18 +2,28 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.projasource.dimport</groupId>
+    <groupId>org.projasource.dbimport</groupId>
     <artifactId>dbimport-maven-plugin</artifactId>
     <version>1.0.0</version>
     <packaging>maven-plugin</packaging>
 
-    <name>Data-Import Maven plugin</name>
-    <url>http://maven.apache.org</url>
+    <name>DataBase-Import Maven Plugin</name>
+    <url>https://github.com/projasource/dbimport-maven-plugin</url>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>http://opensource.org/licenses/MIT</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>git clone https://github.com/projasource/dbimport-maven-plugin.git</connection>
+        <url>https://github.com/projasource/dbimport-maven-plugin</url>
+    </scm>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
 
     <dependencies>
         <dependency>

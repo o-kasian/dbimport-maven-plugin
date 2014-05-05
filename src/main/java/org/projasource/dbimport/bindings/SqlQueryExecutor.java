@@ -1,4 +1,26 @@
-package org.projasource.dimport;
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2014 projasource.org
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package org.projasource.dbimport.bindings;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,7 +34,7 @@ import org.json.simple.JSONObject;
 
 /**
  *
- * @author oleg
+ * @author Oleg Kasian
  */
 public class SqlQueryExecutor {
 
@@ -23,39 +45,23 @@ public class SqlQueryExecutor {
     }
 
     public String list(final String sql, final Object[] params) throws SQLException {
-        final JSONArray result = new JSONArray();
-        final Connection conn = ds.getConnection();
-        try {
-            final PreparedStatement ps = conn.prepareStatement(sql);
-            try {
-                if (params != null) {
-                    for (int i = 1; i <= params.length; i++) {
-                        ps.setObject(i, params[i]);
-                    }
+        return execute(sql, params, new RSCallback() {
+            public String fetchResultSet(ResultSet rs) throws SQLException {
+                final JSONArray result = new JSONArray();
+                final List<String> fields = new ArrayList<String>();
+                for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                    fields.add(rs.getMetaData().getColumnName(i));
                 }
-                final ResultSet rs = ps.executeQuery();
-                try {
-                    final List<String> fields = new ArrayList<String>();
-                    for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-                        fields.add(rs.getMetaData().getColumnName(i));
+                while (rs.next()) {
+                    final JSONObject row = new JSONObject();
+                    for (final String nm : fields) {
+                        row.put(nm, rs.getString(nm));
                     }
-                    while (rs.next()) {
-                        final JSONObject row = new JSONObject();
-                        for (final String nm : fields) {
-                            row.put(nm, rs.getString(nm));
-                        }
-                        result.add(row);
-                    }
-                } finally {
-                    rs.close();
+                    result.add(row);
                 }
-            } finally {
-                ps.close();
+                return result.toJSONString();
             }
-            return result.toJSONString();
-        } finally {
-            conn.close();
-        }
+        });
     }
 
     public String list(final String sql) throws SQLException {
@@ -63,39 +69,22 @@ public class SqlQueryExecutor {
     }
 
     public String unique(final String sql, final Object[] params) throws SQLException {
-        final JSONObject o = new JSONObject();
-        final Connection conn = ds.getConnection();
-        try {
-            final PreparedStatement ps = conn.prepareStatement(sql);
-            try {
-                if (params != null) {
-                    for (int i = 1; i <= params.length; i++) {
-                        ps.setObject(i, params[i]);
-                    }
+        return execute(sql, params, new RSCallback() {
+            public String fetchResultSet(ResultSet rs) throws SQLException {
+                final List<String> fields = new ArrayList<String>();
+                for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                    fields.add(rs.getMetaData().getColumnName(i));
                 }
-                final ResultSet rs = ps.executeQuery();
-                try {
-                    final List<String> fields = new ArrayList<String>();
-                    for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-                        fields.add(rs.getMetaData().getColumnName(i));
+                if (rs.next()) {
+                    final JSONObject row = new JSONObject();
+                    for (final String nm : fields) {
+                        row.put(nm, rs.getString(nm));
                     }
-                    if (rs.next()) {
-                        final JSONObject row = new JSONObject();
-                        for (final String nm : fields) {
-                            row.put(nm, rs.getString(nm));
-                        }
-                        return row.toJSONString();
-                    }
-                } finally {
-                    rs.close();
+                    return row.toJSONString();
                 }
-            } finally {
-                ps.close();
+                return null;
             }
-        } finally {
-            conn.close();
-        }
-        return o.toJSONString();
+        });
     }
 
     public String unique(final String sql) throws SQLException {
@@ -103,6 +92,21 @@ public class SqlQueryExecutor {
     }
 
     public String single(final String sql, final Object[] params) throws SQLException {
+        return execute(sql, params, new RSCallback() {
+            public String fetchResultSet(ResultSet rs) throws SQLException {
+                if (rs.next()) {
+                    return rs.getString(1);
+                }
+                return null;
+            }
+        });
+    }
+
+    public String single(final String sql) throws SQLException {
+        return single(sql, null);
+    }
+
+    private String execute(final String sql, final Object[] params, final RSCallback callback) throws SQLException {
         final Connection conn = ds.getConnection();
         try {
             final PreparedStatement ps = conn.prepareStatement(sql);
@@ -114,10 +118,7 @@ public class SqlQueryExecutor {
                 }
                 final ResultSet rs = ps.executeQuery();
                 try {
-                    if (rs.next()) {
-                        return rs.getString(1);
-                    }
-                    return null;
+                    return callback.fetchResultSet(rs);
                 } finally {
                     rs.close();
                 }
@@ -129,7 +130,8 @@ public class SqlQueryExecutor {
         }
     }
 
-    public String single(final String sql) throws SQLException {
-        return single(sql, null);
+    private interface RSCallback {
+
+        String fetchResultSet(final ResultSet rs) throws SQLException;
     }
 }
