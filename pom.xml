@@ -77,13 +77,5 @@
             </plugin>
         </plugins>
     </build>
-    
-    <distributionManagement>
-        <repository>
-            <id>nexus</id>
-            <name>Nexus Staging Repo</name>
-            <url>http://10.1.99.163:4040/nexus/content/repositories/itsm/</url>
-        </repository>
-    </distributionManagement>
-    
+
 </project>
