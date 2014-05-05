@@ -4,10 +4,10 @@
 
     <groupId>org.projasource.dbimport</groupId>
     <artifactId>dbimport-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0.SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
-    <name>DataBase-Import Maven Plugin</name>
+    <name>DataBase Import Maven Plugin</name>
     <url>https://github.com/projasource/dbimport-maven-plugin</url>
     <licenses>
         <license>
