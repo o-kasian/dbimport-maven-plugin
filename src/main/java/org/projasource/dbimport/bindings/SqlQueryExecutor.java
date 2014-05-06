@@ -28,7 +28,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.dbcp.BasicDataSource;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -38,10 +37,10 @@ import org.json.simple.JSONObject;
  */
 public class SqlQueryExecutor {
 
-    private final BasicDataSource ds;
+    private final Connection conn;
 
-    public SqlQueryExecutor(final BasicDataSource ds) {
-        this.ds = ds;
+    public SqlQueryExecutor(final Connection conn) {
+        this.conn = conn;
     }
 
     public String list(final String sql, final Object[] params) throws SQLException {
@@ -106,28 +105,34 @@ public class SqlQueryExecutor {
         return single(sql, null);
     }
 
-    private String execute(final String sql, final Object[] params, final RSCallback callback) throws SQLException {
-        final Connection conn = ds.getConnection();
+    public String execute(final String sql, final Object[] params, final RSCallback callback) throws SQLException {
+        final PreparedStatement ps = conn.prepareStatement(sql);
         try {
-            final PreparedStatement ps = conn.prepareStatement(sql);
+            if (params != null) {
+                for (int i = 1; i <= params.length; i++) {
+                    ps.setObject(i, params[i]);
+                }
+            }
+            final ResultSet rs = ps.executeQuery();
             try {
-                if (params != null) {
-                    for (int i = 1; i <= params.length; i++) {
-                        ps.setObject(i, params[i]);
-                    }
-                }
-                final ResultSet rs = ps.executeQuery();
-                try {
+                if (callback != null) {
                     return callback.fetchResultSet(rs);
-                } finally {
-                    rs.close();
                 }
+                return null;
             } finally {
-                ps.close();
+                rs.close();
             }
         } finally {
-            conn.close();
+            ps.close();
         }
+    }
+
+    public String execute(final String sql) throws SQLException {
+        return execute(sql, null, null);
+    }
+
+    public String execute(final String sql, final Object[] params) throws SQLException {
+        return execute(sql, params, null);
     }
 
     private interface RSCallback {

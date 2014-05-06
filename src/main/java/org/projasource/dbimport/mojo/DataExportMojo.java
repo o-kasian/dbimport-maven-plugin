@@ -32,8 +32,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Execute;
@@ -55,30 +53,14 @@ import org.json.simple.JSONObject;
         requiresDependencyCollection = ResolutionScope.COMPILE,
         aggregator = true)
 @Execute(phase = LifecyclePhase.PACKAGE)
-public class DataExportMojo extends AbstractMojo {
-
-    @Parameter(property = "driverClass", required = true)
-    private String driverClass;
-
-    @Parameter(property = "url", required = true)
-    private String url;
-
-    @Parameter(property = "user", required = true)
-    private String user;
-
-    @Parameter(property = "password", required = true)
-    private String password;
-
-    @Parameter(property = "schema")
-    private String schema;
+public class DataExportMojo extends DBImportMojo {
 
     @Parameter(property = "tableNames", required = true)
-    private List<String> tableNames;
+    protected List<String> tableNames;
 
     @Parameter(property = "storage", required = true)
-    private String storage;
+    protected String storage;
 
-    private BasicDataSource ds;
     private File store;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -93,19 +75,10 @@ public class DataExportMojo extends AbstractMojo {
             export.writeJSONString(out);
             out.flush();
             out.close();
-        } catch (IOException e) {
+        } catch (final Exception e) {
             e.printStackTrace();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+            throw new MojoFailureException("Could not execute due to error", e);
         }
-    }
-
-    protected void initDataSource() {
-        ds = new BasicDataSource();
-        ds.setUrl(url);
-        ds.setDriverClassName(driverClass);
-        ds.setUsername(user);
-        ds.setPassword(password);
     }
 
     protected void initStorage() throws IOException {
@@ -120,7 +93,7 @@ public class DataExportMojo extends AbstractMojo {
         if (schema != null) {
             select += schema + ".";
         }
-        final Connection c = ds.getConnection();
+        final Connection c = getDataSource().getConnection();
         try {
             final PreparedStatement ps = c.prepareStatement(select + name);
             final JSONArray table = new JSONArray();
