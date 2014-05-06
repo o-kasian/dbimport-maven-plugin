@@ -135,7 +135,7 @@ public class SqlQueryExecutor {
         return execute(sql, params, null);
     }
 
-    private interface RSCallback {
+    public static interface RSCallback {
 
         String fetchResultSet(final ResultSet rs) throws SQLException;
     }
