@@ -61,9 +61,9 @@ Following example plugin configuration show's how to configure a plugin to use O
 </plugin>
 ```
 
-With a following configuration you are now ready to run ```mvn data-import:export``` in your project home directory. Data will be exported to ```src/main/resources/import-data.json``` relative to your project's home directory (importDescriptor property). You can export any data with any structure (f.ex. making custom select from multiple tables), this will not be imported 'as is', but as you configure to use it (look into ***extraConditions*** property).
+With a following configuration you are now ready to run ```mvn data-import:export``` in your project home directory. Data will be exported to ```src/main/resources/import-data.json``` relative to your project's home directory (importDescriptor property). You can export any data with any structure (f.ex. making custom select from multiple tables), this will not be imported 'as is', but as you configure to use it (look into **extraConditions** property).
 
-When you are done with export, it's time to write *import configuration*. Location of import configuration is controlled with `importDescriptor` property. ImportDescriptor - is a json file with a predefined structure.
+When you are done with export, it's time to write **import configuration**. Location of import configuration is controlled with `importDescriptor` property. ImportDescriptor - is a json file with a predefined structure.
 
 ```json
 {
@@ -97,5 +97,34 @@ When you are done with export, it's time to write *import configuration*. Locati
 }
 ```
 
-In this example two tables are imported. *USER.ID* - is a value recieved from sequence `USER_SEQUENCE` and *USER.FULL_NAME* - is a concatanation of *USER.NAME* and *USER.FAMILY_NAME*, which are recieved from exported files.
-For expressions standard javascript is used (with several predefined functions such as field, tableSize etc.), full reference of the objects and functions available is below.
+In this example two tables are imported. **USER.ID** - is a value recieved from sequence `USER_SEQUENCE` and **USER.FULL_NAME** - is a concatanation of **USER.NAME** and **USER.FAMILY_NAME**, which are recieved from exported files.
+
+All possible properties are listed in the table
+
+|property key                      |description                                                          |required |
+|----------------------------------|---------------------------------------------------------------------|---------|
+|/preconditions                    |An array of expressions to be executed before import.                |false    |
+|/postconditions                   |An array of expressions to be executed after import.                 |false    |
+|/tables                           |A map of 'table_name' => 'table' to be used during import            |true     |
+|/tables/{NAME}                    |A table with name == {NAME}.                                         |true     |
+|/tables/{NAME}/iterator           |How many rows will be inserted.                                      |true     |
+|/tables/{NAME}/fields             |Fields to be used in insert statements.                              |true     |
+|/tables/{NAME}/fields/{FIELD}     |An expression to be evaluated as a field value.                      |true     |
+
+For property values standard **javascript expressions** are used (with several predefined functions such as field, tableSize etc.), full reference of the objects and functions available is listed below.
+
+* **stdout** - System.out
+* **stderr** - System.err
+* **db** - imported file, represented as javascript object.
+* **env** - System.getProperties()
+* **sql** - SqlQueryExecutor object. Can be used to execute sql, and fetch resultset.
+* **project** - MavenProject object. Can be used to obtain project properties.
+* **tableName** - A name of a table for current iteration.
+* **fieldName** - A name of a field for current iteration.
+* **iterator** - Current iteration (a numeral of row to be inserted)
+* **oQuery(obj, expr)** - Simple predicates library. Author - http://danml.com/js/oquery.js
+* **require(url)** - Used to load and eval JS file.
+* **tableSize()** - An alias for ```db[tableName].length```
+* **field()** - An alias for ```db[tableName][iterator][fieldName]```
+* **extId(value)** - writes an extra column for relation, when **value** is assigned to column used in foreign key 
+* **extByName(table, field)** - retrieves a new id (previously written with ```extId()```), related to current field with ```db[table][field] == field()``` 
